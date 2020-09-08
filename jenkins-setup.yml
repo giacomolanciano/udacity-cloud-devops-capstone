@@ -1,0 +1,141 @@
+Description: >
+  This template deploys the computing resources required for running Jenkins
+
+Parameters:
+  EnvironmentName:
+    Description: The environment name that will be prefixed to resource names
+    Type: String
+
+  JenkinsServerImageId:
+    Description: The AMI id for the Jenkins server (default Ubuntu 18.04 LTS)
+    Type: AWS::EC2::Image::Id
+    Default: ami-0fc20dd1da406780b
+
+  JenkinsServerDefaultUser:
+    Description: The default user name for the Jenkins server (default 'ubuntu')
+    Type: String
+    Default: ubuntu
+
+  JenkinsServerInstanceType:
+    Description: The instance type for the Jenkins server
+    Type: String
+    Default: t2.micro
+
+  JenkinsServerDiskSize:
+    Description: The disk size for the Jenkins server
+    Type: Number
+    Default: 10
+
+  JenkinsServerKeyName:
+    Description: >
+      The (already existing) SSH key to be associated with Jenkins server. If left empty, it will not be possible
+      to log directly.
+    Type: String
+
+  JenkinsServerAccessCIDR:
+    Description: The IP range (CIDR notation) that is allowed to connect to Jenkins server.
+    Type: String
+
+Resources:
+  JenkinsServerSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Jenkins Console and SSH access from my IP only
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref JenkinsServerAccessCIDR
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref JenkinsServerAccessCIDR
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  JenkinsServerLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub ${EnvironmentName}-Jenkins-Server-Template
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: "/dev/sdk"
+            Ebs:
+              VolumeSize: !Ref JenkinsServerDiskSize
+        ImageId: !Ref JenkinsServerImageId
+        InstanceType: !Ref JenkinsServerInstanceType
+        SecurityGroups:
+          - !Ref JenkinsServerSecGroup
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            # Install Jenkins
+            sudo apt-get update
+            sudo apt install -y default-jdk
+            wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+            sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > \
+              /etc/apt/sources.list.d/jenkins.list'
+            sudo apt-get update
+            sudo apt-get install -y jenkins
+            sudo systemctl start jenkins
+            sudo systemctl enable jenkins
+            # Install Docker
+            sudo apt-get remove -y docker docker-engine docker.io containerd runc
+            sudo apt-get update
+            sudo apt-get install -y \
+              apt-transport-https \
+              ca-certificates \
+              curl \
+              gnupg-agent \
+              software-properties-common
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            sudo add-apt-repository \
+              "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+              $(lsb_release -cs) \
+              stable"
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+            sudo docker run hello-world
+            sudo usermod -a -G docker ${JenkinsServerDefaultUser}
+            sudo systemctl enable docker
+            # Install CI/CD tools
+            sudo apt-get install -y tidy
+            sudo wget -O /bin/hadolint \
+              https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64 \
+              && sudo chmod +x /bin/hadolint
+        KeyName: !Ref JenkinsServerKeyName
+
+  JenkinsServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref JenkinsServerLaunchTemplate
+        Version: "1"
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Jenkins Server
+
+  JenkinsServerEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Jenkins Server IP
+
+  JenkinsServerEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt JenkinsServerEIP.AllocationId
+      InstanceId: !Ref JenkinsServer
+
+Outputs:
+  JenkinsServerDNSName:
+    Description: The DNS name of the Jenkins Server
+    Value: !Join
+      - ":"
+      - - !GetAtt JenkinsServer.PublicDnsName
+        - "8080"
+    Export:
+      Name: !Sub ${EnvironmentName}-Jenkins-DNS
