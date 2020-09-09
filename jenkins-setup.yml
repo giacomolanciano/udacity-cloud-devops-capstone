@@ -70,6 +70,7 @@ Resources:
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
+
             # Install Jenkins
             sudo apt-get update
             sudo apt install -y default-jdk
@@ -80,6 +81,7 @@ Resources:
             sudo apt-get install -y jenkins
             sudo systemctl start jenkins
             sudo systemctl enable jenkins
+
             # Install Docker
             sudo apt-get remove -y docker docker-engine docker.io containerd runc
             sudo apt-get update
@@ -99,11 +101,37 @@ Resources:
             sudo docker run hello-world
             sudo usermod -a -G docker ${JenkinsServerDefaultUser}
             sudo systemctl enable docker
+
+            # Install AWS CLI
+            sudo apt-get update
+            sudo apt-get install -y unzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            aws --version
+            aws configure set region ${AWS::Region}
+            aws configure set aws_access_key_id ${JenkinsIAMUserAccessKey}
+            aws configure set aws_access_key_id ${JenkinsIAMUserAccessKey.SecretAccessKey}
+
+            # Install eksctl
+            curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            sudo mv /tmp/eksctl /usr/local/bin
+            eksctl version
+
+            # Install kubectl
+            curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.17.9/2020-08-04/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin
+            kubectl version --short --client
+
             # Install CI/CD tools
             sudo apt-get install -y tidy
+            tidy --version
+
             sudo wget -O /bin/hadolint \
               https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64 \
               && sudo chmod +x /bin/hadolint
+            hadolint --version
         KeyName: !Ref JenkinsServerKeyName
 
   JenkinsServer:
@@ -111,7 +139,7 @@ Resources:
     Properties:
       LaunchTemplate:
         LaunchTemplateId: !Ref JenkinsServerLaunchTemplate
-        Version: "1"
+        Version: "1" # TODO substitute with: !GetAtt JenkinsServerLaunchTemplate.LatestVersionNumber
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName} Jenkins Server
@@ -130,6 +158,80 @@ Resources:
       AllocationId: !GetAtt JenkinsServerEIP.AllocationId
       InstanceId: !Ref JenkinsServer
 
+  JenkinsIAMUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: jenkins
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+      Policies:
+        - PolicyName: EksAllAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: eks:*
+                Resource: "*"
+              - Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource:
+                  - !Sub arn:aws:ssm:*:${AWS::AccountId}:parameter/aws/*
+                  - arn:aws:ssm:*::parameter/aws/*
+                Effect: Allow
+              - Action:
+                  - kms:CreateGrant
+                  - kms:DescribeKey
+                Resource: "*"
+                Effect: Allow
+        - PolicyName: IamLimitedAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:CreateInstanceProfile
+                  - iam:DeleteInstanceProfile
+                  - iam:GetInstanceProfile
+                  - iam:RemoveRoleFromInstanceProfile
+                  - iam:GetRole
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:ListInstanceProfiles
+                  - iam:AddRoleToInstanceProfile
+                  - iam:ListInstanceProfilesForRole
+                  - iam:PassRole
+                  - iam:DetachRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRolePolicy
+                  - iam:GetOpenIDConnectProvider
+                  - iam:CreateOpenIDConnectProvider
+                  - iam:DeleteOpenIDConnectProvider
+                  - iam:ListAttachedRolePolicies
+                  - iam:TagRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:instance-profile/eksctl-*
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/eksctl-*
+                  - !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/*
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/eksctl-managed-*
+              - Effect: Allow
+                Action:
+                  - iam:GetRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/*
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Jenkins User
+
+  JenkinsIAMUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref JenkinsIAMUser
+
 Outputs:
   JenkinsServerDNSName:
     Description: The DNS name of the Jenkins Server
@@ -139,3 +241,7 @@ Outputs:
         - "8080"
     Export:
       Name: !Sub ${EnvironmentName}-Jenkins-DNS
+  AccessKey:
+    Value: !Ref JenkinsIAMUserAccessKey
+  SecretAccessKey:
+    Value: !GetAtt JenkinsIAMUserAccessKey.SecretAccessKey
