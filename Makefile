@@ -7,6 +7,10 @@ lint:
 docker-build:
 	docker build -t udacity-cloud-devops-capstone .
 
+docker-push:
+	docker tag udacity-cloud-devops-capstone:latest glanciano/udacity-cloud-devops-capstone:latest
+	docker push glanciano/udacity-cloud-devops-capstone:latest
+
 docker-run:
 	docker run -it --rm -d -p 80:80 --name web udacity-cloud-devops-capstone
 
