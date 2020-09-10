@@ -13,8 +13,8 @@ docker-run:
 docker-stop:
 	docker container stop web
 
-docker-clean: docker-stop
-	docker image prune -f
+docker-clean:
+	docker system prune -f
 
 create-jenkins:
 	aws cloudformation create-stack --stack-name jenkins-server --template-body file://jenkins-setup.yml --parameters file://jenkins-setup-params.json --capabilities CAPABILITY_NAMED_IAM
