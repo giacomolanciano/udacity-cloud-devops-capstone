@@ -100,6 +100,8 @@ Resources:
             sudo apt-get install -y docker-ce docker-ce-cli containerd.io
             sudo docker run hello-world
             sudo usermod -a -G docker ${JenkinsServerDefaultUser}
+            sudo usermod -a -G docker jenkins
+            sudo systemctl restart jenkins
             sudo systemctl enable docker
 
             # Install AWS CLI
