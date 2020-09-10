@@ -2,6 +2,10 @@
 
 lint:
 	tidy -q -e *.html
+	hadolint Dockerfile
+
+lint-dockerized:
+	tidy -q -e *.html
 	docker run --rm -i hadolint/hadolint < Dockerfile
 
 docker-build:
