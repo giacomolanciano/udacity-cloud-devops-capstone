@@ -125,7 +125,11 @@ Resources:
             kubectl version --short --client
 
             # Install CI/CD tools
-            sudo apt-get install -y tidy
+            sudo apt-get install -y \
+              make \
+              tidy
+
+            make --version
             tidy --version
 
             sudo wget -O /bin/hadolint \
