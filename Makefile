@@ -43,6 +43,20 @@ kubectl-config:
 kubectl-switch-context:
 	kubectl config use-context `aws eks describe-cluster --name cloud-devops-capstone-cluster | python3 -c "import sys, json; print(json.load(sys.stdin)['cluster']['arn'])"`
 
+deploy:
+	kubectl apply -f kubernetes/web-app.yml
+	@echo
+	kubectl get deployments
+	@echo
+	kubectl rollout status deployment.v1.apps/udacity-cloud-devops-capstone-deployment
+	@echo
+	kubectl get all
+
+decommision:
+	kubectl delete -f kubernetes/web-app.yml
+	@echo
+	kubectl get all
+
 jenkins-create:
 	aws cloudformation create-stack --stack-name jenkins-server --template-body file://cloudformation/jenkins-setup.yml --parameters file://cloudformation/jenkins-setup-params.json --capabilities CAPABILITY_NAMED_IAM
 

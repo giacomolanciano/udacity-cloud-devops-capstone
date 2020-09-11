@@ -18,5 +18,14 @@ pipeline {
                 }
             }
         }
+        stage('Deploying to AWS EKS...') {
+            steps {
+                withAWS(region:'us-east-2', credentials:'aws-credentials') {
+                    sh 'make kubectl-config'
+                    sh 'make kubectl-switch-context'
+                    sh 'make deploy'
+                }
+            }
+        }
     }
 }
