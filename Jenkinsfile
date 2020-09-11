@@ -29,5 +29,10 @@ pipeline {
                 }
             }
         }
+        stage('Cleaning up...') {
+            steps {
+                sh 'make docker-clean'
+            }
+        }
     }
 }
