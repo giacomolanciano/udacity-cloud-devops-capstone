@@ -28,10 +28,10 @@ docker-clean:
 	docker system prune -f
 
 jenkins-create:
-	aws cloudformation create-stack --stack-name jenkins-server --template-body file://jenkins-setup.yml --parameters file://jenkins-setup-params.json --capabilities CAPABILITY_NAMED_IAM
+	aws cloudformation create-stack --stack-name jenkins-server --template-body file://cloudformation/jenkins-setup.yml --parameters file://cloudformation/jenkins-setup-params.json --capabilities CAPABILITY_NAMED_IAM
 
 jenkins-update:
-	aws cloudformation update-stack --stack-name jenkins-server --template-body file://jenkins-setup.yml --parameters file://jenkins-setup-params.json --capabilities CAPABILITY_NAMED_IAM
+	aws cloudformation update-stack --stack-name jenkins-server --template-body file://cloudformation/jenkins-setup.yml --parameters file://cloudformation/jenkins-setup-params.json --capabilities CAPABILITY_NAMED_IAM
 
 jenkins-delete:
 	aws cloudformation delete-stack --stack-name jenkins-server
