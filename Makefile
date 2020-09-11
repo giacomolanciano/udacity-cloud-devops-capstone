@@ -1,4 +1,4 @@
-.PHONY: lint lint-dockerized cloudformation-lint create-jenkins update-jenkins delete-jenkins docker-build docker-run docker-stop docker-clean
+.PHONY: lint lint-dockerized lint-cloudformation create-jenkins update-jenkins delete-jenkins docker-build docker-run docker-stop docker-clean
 
 lint:
 	tidy -q -e src/*.html
@@ -8,7 +8,7 @@ lint-dockerized:
 	tidy -q -e src/*.html
 	docker run --rm -i hadolint/hadolint < Dockerfile
 
-cloudformation-lint:
+lint-cloudformation:
 	cfn-lint -i W2509 -- cloudformation/*.yml
 
 docker-build:
