@@ -27,6 +27,22 @@ docker-stop:
 docker-clean:
 	docker system prune -f
 
+eks-cluster-create:
+	eksctl create cluster --name cloud-devops-capstone-cluster --version 1.17 --region us-east-2 --nodegroup-name linux-nodes --node-type t2.medium --nodes 3 --nodes-min 1 --nodes-max 4 --ssh-access --ssh-public-key udacity-capstone-devops --managed
+
+eks-cluster-delete:
+	eksctl delete cluster --name cloud-devops-capstone-cluster
+
+eks-cluster-cfn-update:
+	aws cloudformation update-stack --stack-name eksctl-cloud-devops-capstone-cluster-cluster --template-body file://cloudformation/eks-cluster.yml --capabilities CAPABILITY_IAM
+	aws cloudformation update-stack --stack-name eksctl-cloud-devops-capstone-cluster-nodegroup-linux-nodes --template-body file://cloudformation/eks-node-group.yml --capabilities CAPABILITY_IAM
+
+kubectl-config:
+	aws eks --region us-east-2 update-kubeconfig --name cloud-devops-capstone-cluster
+
+kubectl-switch-context:
+	kubectl config use-context `aws eks describe-cluster --name cloud-devops-capstone-cluster | python3 -c "import sys, json; print(json.load(sys.stdin)['cluster']['arn'])"`
+
 jenkins-create:
 	aws cloudformation create-stack --stack-name jenkins-server --template-body file://cloudformation/jenkins-setup.yml --parameters file://cloudformation/jenkins-setup-params.json --capabilities CAPABILITY_NAMED_IAM
 
