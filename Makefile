@@ -1,12 +1,12 @@
 .PHONY: lint create-jenkins update-jenkins delete-jenkins docker-build docker-run docker-stop docker-clean
 
 lint:
-	tidy -q -e *.html
+	tidy -q -e src/*.html
 	hadolint Dockerfile
 	cfn-lint -i W2509 -- cloudformation/*.yml
 
 lint-dockerized:
-	tidy -q -e *.html
+	tidy -q -e src/*.html
 	docker run --rm -i hadolint/hadolint < Dockerfile
 	cfn-lint -i W2509 -- cloudformation/*.yml
 
