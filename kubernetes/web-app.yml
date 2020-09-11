@@ -7,8 +7,9 @@ metadata:
 spec:
   strategy:
     type: RollingUpdate
-    maxUnavailable: 25%
-    maxSurge: 25%
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
   replicas: 3
   selector:
     matchLabels:

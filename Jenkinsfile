@@ -22,7 +22,6 @@ pipeline {
             steps {
                 withAWS(region:'us-east-2', credentials:'aws-credentials') {
                     sh '''
-                        aws eks list-clusters
                         make kubectl-config
                         make kubectl-switch-context
                         make deploy
