@@ -1,4 +1,4 @@
-.PHONY: lint create-jenkins update-jenkins delete-jenkins docker-build docker-run docker-stop docker-clean
+.PHONY: lint lint-dockerized cloudformation-lint create-jenkins update-jenkins delete-jenkins docker-build docker-run docker-stop docker-clean
 
 lint:
 	tidy -q -e src/*.html
