@@ -48,6 +48,8 @@ deploy:
 	@echo
 	kubectl get deployments
 	@echo
+	kubectl rollout restart deployment.v1.apps/udacity-cloud-devops-capstone-deployment
+	@echo
 	kubectl rollout status deployment.v1.apps/udacity-cloud-devops-capstone-deployment
 	@echo
 	kubectl get all
