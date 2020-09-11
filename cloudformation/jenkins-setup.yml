@@ -1,6 +1,12 @@
 Description: >
   This template deploys the computing resources required for running Jenkins
 
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W2509
+
 Parameters:
   EnvironmentName:
     Description: The environment name that will be prefixed to resource names
@@ -129,10 +135,14 @@ Resources:
             # Install CI/CD tools
             sudo apt-get install -y \
               make \
+              pip3 \
               tidy
 
             make --version
+            pip3 --version
             tidy --version
+
+            pip3 install cfn-lint && source ~/.profile
 
             sudo wget -O /bin/hadolint \
               https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64 \

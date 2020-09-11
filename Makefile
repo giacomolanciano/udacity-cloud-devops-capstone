@@ -3,10 +3,12 @@
 lint:
 	tidy -q -e *.html
 	hadolint Dockerfile
+	cfn-lint -i W2509 -- cloudformation/*.yml
 
 lint-dockerized:
 	tidy -q -e *.html
 	docker run --rm -i hadolint/hadolint < Dockerfile
+	cfn-lint -i W2509 -- cloudformation/*.yml
 
 docker-build:
 	docker build -t udacity-cloud-devops-capstone .
