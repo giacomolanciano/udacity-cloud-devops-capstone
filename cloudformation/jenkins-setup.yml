@@ -107,7 +107,6 @@ Resources:
             sudo docker run hello-world
             sudo usermod -a -G docker ${JenkinsServerDefaultUser}
             sudo usermod -a -G docker jenkins
-            sudo systemctl restart jenkins
             sudo systemctl enable docker
 
             # Install AWS CLI
@@ -135,19 +134,18 @@ Resources:
             # Install CI/CD tools
             sudo apt-get install -y \
               make \
-              pip3 \
               tidy
 
             make --version
-            pip3 --version
             tidy --version
-
-            pip3 install cfn-lint && source ~/.profile
 
             sudo wget -O /bin/hadolint \
               https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64 \
               && sudo chmod +x /bin/hadolint
             hadolint --version
+
+            # Restart Jenkins to apply changes
+            sudo systemctl restart jenkins
         KeyName: !Ref JenkinsServerKeyName
 
   JenkinsServer:

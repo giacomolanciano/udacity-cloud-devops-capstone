@@ -3,11 +3,12 @@
 lint:
 	tidy -q -e src/*.html
 	hadolint Dockerfile
-	cfn-lint -i W2509 -- cloudformation/*.yml
 
 lint-dockerized:
 	tidy -q -e src/*.html
 	docker run --rm -i hadolint/hadolint < Dockerfile
+
+cloudformation-lint:
 	cfn-lint -i W2509 -- cloudformation/*.yml
 
 docker-build:
