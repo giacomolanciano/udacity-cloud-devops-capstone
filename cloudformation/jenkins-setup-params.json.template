@@ -1,0 +1,18 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "JenkinsServerKeyName",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "JenkinsServerAccessCIDR",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "JenkinsServerInstanceType",
+        "ParameterValue": ""
+    }
+]
