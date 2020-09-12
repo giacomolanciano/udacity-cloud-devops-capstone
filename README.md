@@ -45,7 +45,7 @@ After Jenkins has restarted, navigate to `/credentials/store/system/domain/_/` a
 - Docker Hub username and password
 
 If you experience `HTTP 403` errors very often, consider navigating to `/configureSecurity/` and check "Enable proxy
-compatibility", under "CSRF Protection" section. **WARNING: this setting may increase Jenkins server vulnerability)**.
+compatibility", under "CSRF Protection" section. **WARNING: this setting may increase Jenkins server vulnerability**.
 
 ## AWS EKS Cluster Setup
 
