@@ -24,7 +24,7 @@ After the stack creation has terminated with success, the installation procedure
 GUI. Login to Jenkins, using the URL listed among the outputs of the CloudFormation script, and install the following
 plugins:
 
-- Blue Ocean (version `1.23`, available [here](https://updates.jenkins.io/download/plugins/blueocean/))
+- Blue Ocean
 - GitHub API (version `1.115`, available [here](http://updates.jenkins-ci.org/download/plugins/github-api/))
 - Pipeline: AWS Steps
 
@@ -36,7 +36,7 @@ The following plugins should be automatically installed together with the previo
 - Display URL for Blue Ocean
 - Events API for Blue Ocean
 - Git Pipeline for Blue Ocean
-- GitHub Pipeline for Blue Ocean (version `1.23`, available [here](https://updates.jenkins.io/download/plugins/blueocean-github-pipeline/))
+- GitHub Pipeline for Blue Ocean
 - Pipeline Implementation for Blue Ocean
 
 After Jenkins has restarted, navigate to `/credentials/store/system/domain/_/` and add the following credentials:
