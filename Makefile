@@ -33,9 +33,17 @@ eks-cluster-create:
 eks-cluster-delete:
 	eksctl delete cluster --name cloud-devops-capstone-cluster
 
+eks-cluster-cfn-create:
+	aws cloudformation create-stack --stack-name eksctl-cloud-devops-capstone-cluster-cluster --template-body file://cloudformation/eks-cluster.yml --capabilities CAPABILITY_IAM
+	aws cloudformation create-stack --stack-name eksctl-cloud-devops-capstone-cluster-nodegroup-linux-nodes --template-body file://cloudformation/eks-node-group.yml --capabilities CAPABILITY_IAM
+
 eks-cluster-cfn-update:
 	aws cloudformation update-stack --stack-name eksctl-cloud-devops-capstone-cluster-cluster --template-body file://cloudformation/eks-cluster.yml --capabilities CAPABILITY_IAM
 	aws cloudformation update-stack --stack-name eksctl-cloud-devops-capstone-cluster-nodegroup-linux-nodes --template-body file://cloudformation/eks-node-group.yml --capabilities CAPABILITY_IAM
+
+eks-cluster-cfn-delete:
+	aws cloudformation delete-stack --stack-name eksctl-cloud-devops-capstone-cluster-cluster
+	aws cloudformation delete-stack --stack-name eksctl-cloud-devops-capstone-cluster-nodegroup-linux-nodes
 
 kubectl-config:
 	aws eks --region us-east-2 update-kubeconfig --name cloud-devops-capstone-cluster
