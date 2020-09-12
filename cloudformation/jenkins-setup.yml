@@ -153,7 +153,7 @@ Resources:
     Properties:
       LaunchTemplate:
         LaunchTemplateId: !Ref JenkinsServerLaunchTemplate
-        Version: "1" # TODO substitute with: !GetAtt JenkinsServerLaunchTemplate.LatestVersionNumber
+        Version: !GetAtt JenkinsServerLaunchTemplate.LatestVersionNumber
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName} Jenkins Server
