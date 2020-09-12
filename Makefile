@@ -1,4 +1,4 @@
-.PHONY: lint lint-dockerized lint-cloudformation create-jenkins update-jenkins delete-jenkins docker-build docker-run docker-stop docker-clean
+.PHONY: lint lint-dockerized lint-cloudformation jenkins-create jenkins-update jenkins-delete docker-build docker-push docker-run docker-stop docker-clean eks-cluster-create eks-cluster-delete eks-cluster-cfn-create eks-cluster-cfn-update eks-cluster-cfn-delete kubectl-config kubectl-switch-context deploy decommision
 
 lint:
 	tidy -q -e src/*.html
