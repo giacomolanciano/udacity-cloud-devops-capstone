@@ -1,11 +1,28 @@
 # Udacity Cloud DevOps Engineer Nanodegree - Capstone Project
 
-## Jenkins
+## Project Overview
 
-Jenkins setup on EC2 is partially automated via a CloudFormation script, to be launched with `make jenkins-create`
-(**Note:** a file named `jenkins-setup-params.json` must be filled with the required information). Although, the
-installation procedure must be completed through the GUI. Login to Jenkins interface, using the URL outputted by the
-CloudFormation script, and install the following plugins:
+In this project, I have applied the skills and knowledge acquired throughout the Cloud DevOps Nanodegree program, such
+as:
+
+- Working with AWS
+- Using Jenkins to implement CI/CD pipelines
+- Building Docker containers
+- Deploying Kubernetes clusters with CloudFormation
+
+The project consists of a rather simple containerized Nginx application that is deployed to an AWS EKS cluster. All the
+required steps are automated through a Jenkins pipeline, that is triggered as soon as new commits are pushed to the
+remote GitHub repository.
+
+## Jenkins Server Setup
+
+Jenkins setup on AWS EC2 is partially automated via a CloudFormation script, that can be run with `make jenkins-create`.
+Before running the script, the file `cloudformation/jenkins-setup-params.json` must be created and filled with the
+required information (`cloudformation/jenkins-setup-params.json.template` is available as a template).
+
+After the stack creation has terminated with success, the installation procedure must be completed through the Jenkins
+GUI. Login to Jenkins, using the URL listed among the outputs of the CloudFormation script, and install the following
+plugins:
 
 - Blue Ocean (version `1.23`, available [here](https://updates.jenkins.io/download/plugins/blueocean/))
 - GitHub API (version `1.115`, available [here](http://updates.jenkins-ci.org/download/plugins/github-api/))
@@ -28,12 +45,15 @@ After Jenkins has restarted, navigate to `/credentials/store/system/domain/_/` a
 - Docker Hub username and password
 
 If you experience `HTTP 403` errors very often, consider navigating to `/configureSecurity/` and check "Enable proxy
-compatibility", under "CSRF Protection" section (**WARNING:** this setting may increase Jenkins server vulnerability).
+compatibility", under "CSRF Protection" section. **WARNING: this setting may increase Jenkins server vulnerability)**.
 
-## AWS EKS
+## AWS EKS Cluster Setup
 
-If the EKS cluster is not created from the EC2 instance used to deploy the Jenkins server (or, in any case, with user
-credentials different from the `jenkins` user's ones), an additional procedure must be performed (described in
+Run `make eks-cluster-cfn-create` to deploy an AWS EKS cluster (in `us-east-2` region) with CloudFormation. The same
+result can be achieved by running `make eks-cluster-create` that leverages on [`eksctl`](https://eksctl.io/).
+
+If the EKS cluster has not been created from the EC2 instance used to deploy the Jenkins server (or has been created
+with user credentials different from the `jenkins` user's ones), an additional procedure must be performed (described in
 details [here](https://aws.amazon.com/premiumsupport/knowledge-center/eks-api-server-unauthorized-error/)):
 
 1. With `jenkins` user credentials, run `aws sts get-caller-identity` to fetch the user ARN.
@@ -55,3 +75,43 @@ details [here](https://aws.amazon.com/premiumsupport/knowledge-center/eks-api-se
    ```
 
    or, equivalently, `make kubectl-config` (that should be also automatically run by the Jenkins pipeline).
+
+## Linting
+
+Run `make lint` (or `make lint-dockerized`, if you do not have `hadolint` installed in your local environment) to lint
+application source code and `Dockerfile`. The same linting steps will be also automatically run by Jenkins.
+
+In addition, you can also run `make lint-cloudformation` to lint CloudFormation scripts in `cloudformation/` with
+[`cfn-lint`](https://github.com/aws-cloudformation/cfn-python-lint).
+
+## Docker
+
+Run `make docker-build` to build the containerized Nginx application and `make docker-push` to upload it on Docker Hub.
+The same steps will be also automatically run by Jenkins.
+
+In addition, you can also run `make docker-run` to start the web app on your local environment (available at
+`localhost:80`) and `make docker-stop` to stop it. Run `make docker-clean` to reclaim disk space.
+
+## Deploy on AWS EKS
+
+In order to deploy the application on AWS EKS, run
+
+```bash
+make kubectl-config
+make kubectl-switch-context
+make deploy
+```
+
+The above commands will, respectively, fetch the Kubernetes configurations of the AWS EKS cluster, switch the context of
+your local environment so that you can interact with it and deploy the application on it. The same steps will be also
+automatically run by Jenkins.
+
+## Cleaning up
+
+In order to delete all the resources deployed in this project, run
+
+```bash
+make decommission
+make jenkins-delete
+make eks-cluster-cfn-delete
+```
