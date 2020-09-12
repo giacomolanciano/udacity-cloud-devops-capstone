@@ -255,7 +255,11 @@ Outputs:
         - "8080"
     Export:
       Name: !Sub ${EnvironmentName}-Jenkins-DNS
+
   AccessKey:
+    Description: The access key of JenkinsIAMUser
     Value: !Ref JenkinsIAMUserAccessKey
+
   SecretAccessKey:
+    Description: The secret access key of JenkinsIAMUser
     Value: !GetAtt JenkinsIAMUserAccessKey.SecretAccessKey
