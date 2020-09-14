@@ -27,10 +27,10 @@ pipeline {
                 '''
             }
         }
-        stage('Cleaning up...') {
-            steps {
-                sh 'make docker-clean'
-            }
+    }
+    post {
+        cleanup {
+            sh 'make docker-clean'
         }
     }
 }
