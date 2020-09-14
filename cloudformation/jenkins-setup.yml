@@ -69,6 +69,8 @@ Resources:
           - DeviceName: "/dev/sdk"
             Ebs:
               VolumeSize: !Ref JenkinsServerDiskSize
+        IamInstanceProfile:
+          Arn: !GetAtt JenkinsServerInstanceProfile.Arn
         ImageId: !Ref JenkinsServerImageId
         InstanceType: !Ref JenkinsServerInstanceType
         SecurityGroups:
@@ -76,6 +78,8 @@ Resources:
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
+
+            set -eo pipefail
 
             # Install Jenkins
             sudo apt-get update
@@ -116,9 +120,6 @@ Resources:
             unzip awscliv2.zip
             sudo ./aws/install
             aws --version
-            aws configure set region ${AWS::Region}
-            aws configure set aws_access_key_id ${JenkinsIAMUserAccessKey}
-            aws configure set aws_access_key_id ${JenkinsIAMUserAccessKey.SecretAccessKey}
 
             # Install eksctl
             curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
@@ -172,10 +173,25 @@ Resources:
       AllocationId: !GetAtt JenkinsServerEIP.AllocationId
       InstanceId: !Ref JenkinsServer
 
-  JenkinsIAMUser:
-    Type: AWS::IAM::User
+  JenkinsServerInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
     Properties:
-      UserName: jenkins
+      Roles:
+        - !Ref JenkinsIAMRole
+
+  JenkinsIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Jenkins
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonEC2FullAccess
         - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
@@ -241,11 +257,6 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName} Jenkins User
 
-  JenkinsIAMUserAccessKey:
-    Type: AWS::IAM::AccessKey
-    Properties:
-      UserName: !Ref JenkinsIAMUser
-
 Outputs:
   JenkinsServerDNSName:
     Description: The DNS name of the Jenkins Server
@@ -255,11 +266,3 @@ Outputs:
         - "8080"
     Export:
       Name: !Sub ${EnvironmentName}-Jenkins-DNS
-
-  AccessKey:
-    Description: The access key of JenkinsIAMUser
-    Value: !Ref JenkinsIAMUserAccessKey
-
-  SecretAccessKey:
-    Description: The secret access key of JenkinsIAMUser
-    Value: !GetAtt JenkinsIAMUserAccessKey.SecretAccessKey
