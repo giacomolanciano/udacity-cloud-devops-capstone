@@ -46,7 +46,7 @@ eks-cluster-cfn-delete:
 	aws cloudformation delete-stack --stack-name eksctl-cloud-devops-capstone-cluster-cluster
 
 kubectl-config:
-	aws eks --region us-east-2 update-kubeconfig --name cloud-devops-capstone-cluster
+	aws eks update-kubeconfig --name cloud-devops-capstone-cluster --region us-east-2
 
 kubectl-switch-context:
 	kubectl config use-context `aws eks describe-cluster --name cloud-devops-capstone-cluster | python3 -c "import sys, json; print(json.load(sys.stdin)['cluster']['arn'])"`
