@@ -70,11 +70,11 @@ pipeline for deploying the application on the EKS cluster (described in details
    following lines to the ConfigMap:
 
    ```bash
-   mapUsers: |
+   mapRoles: |
      - rolearn: <Jenkins IAM Role ARN>
-        username: Jenkins
-        groups:
-        - system:masters
+       username: Jenkins
+       groups:
+         - system:masters
    ```
 
 3. From the Jenkins server, run
